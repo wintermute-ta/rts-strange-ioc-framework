@@ -207,8 +207,8 @@ public class HexMesh : MonoBehaviour {
 		terrainTypes.Add(types);
 	}
 
-    public void SetHighlightCoord(HexCoordinates coordinates)
+    public void SetHighlightCoord(HexCoordinates coordinates, float value)
     {
-        meshRenderer.sharedMaterial.SetVector("_Point", new Vector4(coordinates.X, coordinates.Y, coordinates.Z, 1.0f));
+        meshRenderer.sharedMaterial.SetVector("_Point", new Vector4(coordinates.X, coordinates.Y, coordinates.Z, value));
     }
 }

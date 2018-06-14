@@ -27,7 +27,37 @@ public class HexGridCell : MonoBehaviour
 
 	public Vector3 Position { get { return transform.localPosition; } }
 
-	public float StreamBedY
+    public bool IsAttackRangeCell
+    {
+        get { return countIsAttackRangeCell > 0; }
+        set
+        {
+            bool oldValue = IsAttackRangeCell;
+            countIsAttackRangeCell += value ? 1 : -1;
+            countIsAttackRangeCell = Mathf.Clamp(countIsAttackRangeCell, 0, int.MaxValue);
+            if (oldValue != IsAttackRangeCell)
+            {
+                chunk.Refresh();
+            }
+        }
+    }
+
+    public bool IsPathCell
+    {
+        get { return countIsPathCell > 0; }
+        set
+        {
+            bool oldValue = IsPathCell;
+            countIsPathCell += value ? 1 : -1;
+            countIsPathCell = Mathf.Clamp(countIsPathCell, 0, int.MaxValue);
+            if (oldValue != IsPathCell)
+            {
+                chunk.Refresh();
+            }
+        }
+    }
+
+    public float StreamBedY
     {
 		get
         {
@@ -58,6 +88,8 @@ public class HexGridCell : MonoBehaviour
 	}
 
     private bool selected;
+    private int countIsAttackRangeCell;
+    private int countIsPathCell;
 
     void RefreshPosition(int elevation)
     {

@@ -2,118 +2,121 @@
 using UnityEngine.UI;
 using System;
 using System.IO;
+using strange.extensions.mediation.impl;
+using strange.extensions.pool.api;
 
-public class SaveLoadMenu : MonoBehaviour {
+public class SaveLoadMenu : MonoBehaviour
+{
+    [Inject]
+    public IPool<SaveLoadItem> pool { get; private set; }
 
-	public Text menuLabel, actionButtonLabel;
+    public Text menuLabel, actionButtonLabel;
+    public InputField nameInput;
 
-	public InputField nameInput;
+    public event Action<string> OnSave = delegate { };
+    public event Action<string> OnLoad = delegate { };
+    public event Action<string> OnDelete = delegate { };
+    public event Action OnClose = delegate { };
+    public event Action OnOpen = delegate { };
 
-	public RectTransform listContent;
+    private RectTransform listContent;
+    private bool saveMode;
 
-	public SaveLoadItem itemPrefab;
+    public void Open(bool saveMode)
+    {
+        this.saveMode = saveMode;
+        if (saveMode)
+        {
+            menuLabel.text = "Save Map";
+            actionButtonLabel.text = "Save";
+        }
+        else
+        {
+            menuLabel.text = "Load Map";
+            actionButtonLabel.text = "Load";
+        }
+        FillList();
+        gameObject.SetActive(true);
+        OnOpen.Invoke();
+    }
 
-	public HexGrid hexGrid;
+    public void Close()
+    {
+        gameObject.SetActive(false);
+        OnClose.Invoke();
+    }
 
-	bool saveMode;
+    public void Action()
+    {
+        string path = GetSelectedPath();
+        if (path == null)
+        {
+            return;
+        }
+        if (saveMode)
+        {
+            OnSave(path);
+        }
+        else {
+            OnLoad(path);
+        }
+        Close();
+    }
 
-	public void Open (bool saveMode) {
-		this.saveMode = saveMode;
-		if (saveMode) {
-			menuLabel.text = "Save Map";
-			actionButtonLabel.text = "Save";
-		}
-		else {
-			menuLabel.text = "Load Map";
-			actionButtonLabel.text = "Load";
-		}
-		FillList();
-		gameObject.SetActive(true);
-		HexMapCamera.Locked = true;
-	}
+    public void SelectItem(string name)
+    {
+        nameInput.text = name;
+    }
 
-	public void Close () {
-		gameObject.SetActive(false);
-		HexMapCamera.Locked = false;
-	}
+    public void Delete()
+    {
+        string path = GetSelectedPath();
+        if (path == null)
+        {
+            return;
+        }
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+        }
+        nameInput.text = "";
+        FillList();
+    }
 
-	public void Action () {
-		string path = GetSelectedPath();
-		if (path == null) {
-			return;
-		}
-		if (saveMode) {
-			Save(path);
-		}
-		else {
-			Load(path);
-		}
-		Close();
-	}
+    void FillList()
+    {
+        for (int i = listContent.childCount; i > 0; i--)
+        {
+            SaveLoadItem item = listContent.GetChild(i - 1).GetComponent<SaveLoadItem>();
+            item.OnSelected -= Item_OnSelected;
+            item.transform.SetParent(null, false);
+            pool.ReturnInstance(item);
+            //Destroy(listContent.GetChild(i).gameObject);
+        }
+        string[] paths = Directory.GetFiles(Application.persistentDataPath, "*.map.bytes");
+        Array.Sort(paths);
+        for (int i = 0; i < paths.Length; i++)
+        {
+            SaveLoadItem item = pool.GetInstance();
+            item.gameObject.SetActive(true);
+            item.OnSelected += Item_OnSelected;
+            item.MapName = Path.GetFileNameWithoutExtension(paths[i]);
+            item.transform.SetParent(listContent, false);
+        }
+    }
 
-	public void SelectItem (string name) {
-		nameInput.text = name;
-	}
+    private void Item_OnSelected(string mapName)
+    {
+        SelectItem(mapName);
+    }
 
-	public void Delete () {
-		string path = GetSelectedPath();
-		if (path == null) {
-			return;
-		}
-		if (File.Exists(path)) {
-			File.Delete(path);
-		}
-		nameInput.text = "";
-		FillList();
-	}
-
-	void FillList () {
-		for (int i = 0; i < listContent.childCount; i++) {
-			Destroy(listContent.GetChild(i).gameObject);
-		}
-		string[] paths =
-			Directory.GetFiles(Application.persistentDataPath, "*.map");
-		Array.Sort(paths);
-		for (int i = 0; i < paths.Length; i++) {
-			SaveLoadItem item = Instantiate(itemPrefab);
-			item.menu = this;
-			item.MapName = Path.GetFileNameWithoutExtension(paths[i]);
-			item.transform.SetParent(listContent, false);
-		}
-	}
-
-	string GetSelectedPath () {
-		string mapName = nameInput.text;
-		if (mapName.Length == 0) {
-			return null;
-		}
-		return Path.Combine(Application.persistentDataPath, mapName + ".map");
-	}
-
-	void Save (string path) {
-		using (
-			BinaryWriter writer =
-			new BinaryWriter(File.Open(path, FileMode.Create))
-		) {
-			writer.Write(2);
-			GameManager.Instance.Map.Save(writer);
-		}
-	}
-
-	void Load (string path) {
-		if (!File.Exists(path)) {
-			Debug.LogError("File does not exist " + path);
-			return;
-		}
-		using (BinaryReader reader = new BinaryReader(File.OpenRead(path))) {
-			int header = reader.ReadInt32();
-			if (header <= 2) {
-                GameManager.Instance.Map.Load(reader, header);
-				HexMapCamera.ValidatePosition();
-			}
-			else {
-				Debug.LogWarning("Unknown map format " + header);
-			}
-		}
-	}
+    string GetSelectedPath()
+    {
+        string mapName = nameInput.text;
+        if (mapName.Length == 0)
+        {
+            return null;
+        }
+        return Path.Combine(Application.persistentDataPath, mapName + ".map.bytes");
+    }
 }

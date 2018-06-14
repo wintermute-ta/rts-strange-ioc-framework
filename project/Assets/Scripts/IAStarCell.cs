@@ -7,6 +7,7 @@ public interface IAStarCell
     int AStarX { get; }
     int AStarZ { get; }
     HexCoordinates AStarCoordinates { get; }
+    //bool IsPathCell { get; set; }
 
     bool IsWalkable();
     float MovementCost();

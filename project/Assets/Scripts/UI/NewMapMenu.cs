@@ -1,35 +1,42 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
-public class NewMapMenu : MonoBehaviour {
+public class NewMapMenu : MonoBehaviour
+{
+    public event Action<int, int> OnCreateMap = delegate { };
+    public event Action OnClose = delegate { };
+    public event Action OnOpen = delegate { };
 
-	public HexGrid hexGrid;
+    public void Open()
+    {
+        gameObject.SetActive(true);
+        OnOpen.Invoke();
+    }
 
-	public void Open () {
-		gameObject.SetActive(true);
-		HexMapCamera.Locked = true;
-	}
+    public void Close()
+    {
+        gameObject.SetActive(false);
+        OnClose.Invoke();
+    }
 
-	public void Close () {
-		gameObject.SetActive(false);
-		HexMapCamera.Locked = false;
-	}
+    public void CreateSmallMap()
+    {
+        CreateMap(20, 15);
+    }
 
-	public void CreateSmallMap () {
-		CreateMap(20, 15);
-	}
+    public void CreateMediumMap()
+    {
+        CreateMap(40, 30);
+    }
 
-	public void CreateMediumMap () {
-		CreateMap(40, 30);
-	}
+    public void CreateLargeMap()
+    {
+        CreateMap(80, 60);
+    }
 
-	public void CreateLargeMap () {
-		CreateMap(80, 60);
-	}
-
-	void CreateMap (int x, int z) {
-        GameManager.Instance.Map.CreateMap(x, z);
-		hexGrid.CreateGrid(GameManager.Instance.Map);
-		HexMapCamera.ValidatePosition();
-		Close();
-	}
+    void CreateMap(int x, int z)
+    {
+        OnCreateMap.Invoke(x, z);
+        Close();
+    }
 }

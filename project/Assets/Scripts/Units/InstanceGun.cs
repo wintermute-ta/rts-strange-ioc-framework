@@ -1,23 +1,18 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 /// <summary>
 /// Description of the instance gun
 /// </summary>
-public class InstanceGun : IUnit
+public class InstanceGun : Unit
 {
-    public HexCoordinates Coordinates { get; set; }
-    public int AttackRange { get; set; }
-    public float HealthPoint { get; set; }
-    public float DamagePerSecond { get; set; }
+    static UnitType[] _targetTypes = new UnitType[] { UnitType.Ship };
 
-    public InstanceGun(HexCoordinates coordinates)
+    public InstanceGun() : base(UnitType.Gun, _targetTypes, GlobalContext.Get().GetInstance<IWeapon>(typeof(WeaponGroundCannon)))
     {
-        Coordinates = coordinates;
-        AttackRange = 3;
-        HealthPoint = 10;
+        HealthPoint = 50f;
     }
-
 }

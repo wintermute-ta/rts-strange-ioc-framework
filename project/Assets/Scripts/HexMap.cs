@@ -4,10 +4,10 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-public class HexMap
+public class HexMap : IHexMap
 {
-    public int CellCountX;
-    public int CellCountZ;
+    public int CellCountX { get; private set; }
+    public int CellCountZ { get; private set; }
 
     public event Action<HexMapChunk> OnDestroyChunk = delegate { };
 
@@ -150,9 +150,28 @@ public class HexMap
         return GetChunk(x + z * chunkCountX);
     }
 
-    public bool TryLoadDefaultMap()
+    public void LoadMap(byte[] data)
     {
-        string path = string.Format("{0}/default.map", Application.persistentDataPath);
+        using (MemoryStream stream = new MemoryStream(data))
+        {
+            using (BinaryReader reader = new BinaryReader(stream))
+            {
+                int header = reader.ReadInt32();
+                if (header <= 2)
+                {
+                    Load(reader, header);
+                }
+                else
+                {
+                    Debug.LogWarning("Unknown map format " + header);
+                }
+            }
+        }
+    }
+
+    public bool LoadMap(string path)
+    {
+        //string path = string.Format("{0}/default.map", Application.persistentDataPath);
         if (!File.Exists(path))
         {
             Debug.LogError("File does not exist " + path);
@@ -168,23 +187,49 @@ public class HexMap
             else
             {
                 Debug.LogWarning("Unknown map format " + header);
+                return false;
             }
         }
         return true;
     }
 
-    public void Save(BinaryWriter writer)
+    public void SaveMap(string path)
     {
-        writer.Write(CellCountX);
-        writer.Write(CellCountZ);
-
-        for (int i = 0; i < cells.Length; i++)
+        using (BinaryWriter writer = new BinaryWriter(File.Open(path, FileMode.Create)))
         {
-            cells[i].Save(writer);
+            writer.Write(2);
+
+            writer.Write(CellCountX);
+            writer.Write(CellCountZ);
+
+            for (int i = 0; i < cells.Length; i++)
+            {
+                cells[i].Save(writer);
+            }
         }
     }
 
-    public void Load(BinaryReader reader, int header)
+    public byte[] SaveMap()
+    {
+        using (MemoryStream stream = new MemoryStream())
+        {
+            using (BinaryWriter writer = new BinaryWriter(stream))
+            {
+                writer.Write(2);
+
+                writer.Write(CellCountX);
+                writer.Write(CellCountZ);
+
+                for (int i = 0; i < cells.Length; i++)
+                {
+                    cells[i].Save(writer);
+                }
+            }
+            return stream.GetBuffer();
+        }
+    }
+
+    private void Load(BinaryReader reader, int header)
     {
         int x = 20, z = 15;
         if (header >= 1)
