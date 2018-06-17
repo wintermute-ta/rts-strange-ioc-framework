@@ -1,17 +1,26 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UI;
+using System;
 
-public interface IUIManager {
+namespace Core
+{
+    public interface IUIManager
+    {
+        Transform Parent { get; }
+        ITouchDetector TouchDetector { get; }
+        bool IsAnyOpenedMenus { get; }
 
-    Transform Parent { get; }
+        BaseUIView CreateHandler(Transform parent, string name);
+        BaseUIView CreateHandler(Transform parent, string name, Vector2 position);
+        T CreateUI<T>(Transform parent, string name) where T : BaseUIView, new();
+        T CreateUI<T>(Transform parent, string name, Vector2 position) where T : BaseUIView, new();
+        void CloseUI(BaseUIView[] views);
+        void ReturnToPool(BaseUIView handler);
 
-    GameObject CreateWindow(Transform parent, string prefabName);
-    GameObject CreateWindow(Transform parent, string prefabName, Vector2 position);
-    T CreateHandler<T>(Transform parent, string prefab) where T : BaseUIHandler, new();
-    T CreateHandler<T>(Transform parent, string prefab, Vector2 position) where T : BaseUIHandler, new();
-    T CreateUI<T>(Transform parent, string prefab, bool globalSignals = false) where T : BaseUIModel, new();
-    T CreateUI<T>(Transform parent, string prefab, Vector2 position, bool globalSignals = false) where T : BaseUIModel, new();
-    GameObject GetFromPool(string name);
-    void ReturnToPool(BaseUIHandler handler);
+        void OnMenuOpened(BaseUIView view);
+        void OnMenuClosed(BaseUIView view);
+        void OnBackPressed();
+    }
 }

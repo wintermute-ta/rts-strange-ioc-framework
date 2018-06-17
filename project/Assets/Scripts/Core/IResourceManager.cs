@@ -2,11 +2,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface IResourceManager
+namespace Core
 {
-    GameObject GetPrefab(string name);
-    T GetPrefabComponent<T>(string name) where T : Component;
-    T[] GetComponentsFromPrefabs<T>() where T : Component;
-    Texture GetTexture(string name);
-    byte[] GetMap(string name);
+    public interface IResourceManager
+    {
+        GameObject GetPrefab(string name);
+        T GetPrefabComponent<T>(string name) where T : Component;
+        T[] GetComponentsFromPrefabs<T>() where T : Component;
+        Texture GetTexture(string name);
+        Material GetMaterial(string name);
+        byte[] GetMap(string name);
+        Sprite GetSprite(string name);
+        AudioClip GetAudioClip(string name);
+    }
 }
