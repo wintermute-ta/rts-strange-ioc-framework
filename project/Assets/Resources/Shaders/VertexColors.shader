@@ -1,97 +1,61 @@
 ﻿Shader "Custom/Terrain" {
 	Properties {
 		_Color ("Color", Color) = (1,1,1,1)
-		_MainTex ("Terrain Texture Array", 2DArray) = "white" {}
-		_Glossiness ("Smoothness", Range(0,1)) = 0.5
-		_Metallic ("Metallic", Range(0,1)) = 0.0
-		_Point("a point in world space", Vector) = (0, 0, 0, 0)
+        _MainTex ("Terrain Texture Atlas", 2D) = "white" {}
+		_GridTex("Grid Texture", 2D) = "white" {}
+		//_Glossiness("Smoothness", Range(0,1)) = 0.5
+		//_Metallic ("Metallic", Range(0,1)) = 0.0
+		_CellPerturbStrength("Cell Perturb Strength", float) = 0.0
+		_Params("External params", Vector) = (0, 0, 0, 0)
+		_Point("A point in world space", Vector) = (0, 0, 0, 0)
 	}
 	SubShader {
 		Tags { "RenderType"="Opaque" }
 		LOD 200
 		
 		CGPROGRAM
-		#pragma surface surf Standard fullforwardshadows vertex:vert
-		#pragma target 3.5
+		#pragma surface surf Lambert fullforwardshadows vertex:vert
 
-		UNITY_DECLARE_TEX2DARRAY(_MainTex);
-
-		half _Glossiness;
-		half _Metallic;
+		sampler2D _MainTex;
+		sampler2D _GridTex;
+		//half _Glossiness;
+		//half _Metallic;
 		fixed4 _Color;
-		float4 _Point;
+		fixed4 _Point;
+		half _CellPerturbStrength;
+		float4 _Params;
 
 		struct Input {
-			float4 color : COLOR;
-			float3 worldPos;
-			float3 terrain;
+			fixed4 color : COLOR;
+			half3 worldPos;
+            fixed4 mainTex_Blend_1_2;
+			fixed2 mainTex_Blend_3;
 		};
 
 		void vert (inout appdata_full v, out Input data) {
 			UNITY_INITIALIZE_OUTPUT(Input, data);
-			data.terrain = v.texcoord2.xyz;
+            data.mainTex_Blend_1_2 = v.texcoord;
+            data.mainTex_Blend_3 = v.texcoord1.xy;
 		}
 
-		float4 GetTerrainColor (Input IN, int index) {
-			float3 uvw = float3(IN.worldPos.xz * 0.02, IN.terrain[index]);
-			float4 c = UNITY_SAMPLE_TEX2DARRAY(_MainTex, uvw);
-			return c * IN.color[index];
-		}
 
-		float3 GetHexCoord(float3 pos)
-		{
-			float outerRadius = 10.0;
-			float outerToInner = 0.866025404;
-			float innerRadius = outerRadius * outerToInner;
-			
-			float3 position = float3(pos.x - 4.0, pos.y, pos.z - 4.0);
+		void surf (Input IN, inout SurfaceOutput o) {
+			fixed4 c = tex2D(_MainTex, IN.mainTex_Blend_1_2.xy) * IN.color[0] + tex2D(_MainTex, IN.mainTex_Blend_1_2.zw) * IN.color[1] + tex2D(_MainTex, IN.mainTex_Blend_3.xy) * IN.color[2];
 
-			float x = position.x / (innerRadius * 2.0);
-			float y = -x;
+			half2 gridUV = half2(IN.worldPos.x - _CellPerturbStrength, IN.worldPos.z - _CellPerturbStrength);
+			gridUV.xy *= _Params.xy;
+			fixed4 grid = tex2D(_GridTex, gridUV);
+			o.Albedo = (c.rgb * (1.0 - grid.a) + grid.rgb * grid.a) * _Color.rgb;
 
-			float offset = position.z / (outerRadius * 3.0);
-			x -= offset;
-			y -= offset;
-
-			float iX = round(x);
-			float iY = round(y);
-			float iZ = round(-x - y);
-
-			if (iX + iY + iZ != 0)
-			{
-				float dX = abs(x - iX);
-				float dY = abs(y - iY);
-				float dZ = abs(-x - y - iZ);
-
-				if (dX > dY && dX > dZ)
-				{
-					iX = -iY - iZ;
-				}
-				else if (dZ > dY)
-				{
-					iZ = -iX - iY;
-				}
-			}
-
-			return float3(iX, iY, iZ);
-		}
-
-		void surf (Input IN, inout SurfaceOutputStandard o) {
-			fixed4 c =
-				GetTerrainColor(IN, 0) +
-				GetTerrainColor(IN, 1) +
-				GetTerrainColor(IN, 2);
-
-			o.Albedo = c.rgb * _Color;
-			o.Metallic = _Metallic;
-			o.Smoothness = _Glossiness;
+			//o.Metallic = _Metallic;
+			//o.Smoothness = _Glossiness;
 			o.Alpha = c.a;
 
-			float3 hexCoord = GetHexCoord(IN.worldPos);
-			if ((hexCoord.x == _Point.x) && (hexCoord.z == _Point.z) && (_Point.w == 1.0))
-			{
-				o.Albedo = float3(0.0, 0.0, 0.0);
-			}
+			//fixed3 hexCoord = GetHexCoord(IN.worldPos);
+			//if ((hexCoord.x == _Point.x) && (hexCoord.z == _Point.z) && (_Point.w == 1.0))
+			//{
+			//	o.Albedo = fixed3(0.0, 0.0, 0.0);
+			//}
 		}
 		ENDCG
 	}

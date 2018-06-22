@@ -87,7 +87,7 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls:
       - m_Target: {fileID: 114778907200386024}
-        m_MethodName: Select
+        m_MethodName: OnSelected
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -170,6 +170,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 84d64ed4125fb4086961b35c40cb2529, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _textMapName: {fileID: 0}
 --- !u!222 &222225118148573466
 CanvasRenderer:
   m_ObjectHideFlags: 1

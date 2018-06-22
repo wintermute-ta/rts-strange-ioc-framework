@@ -1,13 +1,8 @@
 ﻿Shader "Custom/Highlight" {
 	Properties {
-		_Color ("Color", Color) = (1,1,1,1)
-		_MainTex ("Albedo (RGB) Alpha (A)", 2D) = "white" {}
-		_Glossiness ("Smoothness", Range(0,1)) = 0.5
-		_Metallic ("Metallic", Range(0,1)) = 0.0
 	}
 	SubShader {
 		Tags { "RenderType"="Transparent"  "Queue" = "Transparent" }
-		//Tags { "RenderType" = "Opaque" "Queue" = "Transparent" "IgnoreProjector" = "True" }
 
 		LOD 200
 		//Cull off
@@ -22,27 +17,19 @@
 		#pragma surface surf Lambert alpha
 
 		// Use shader model 3.0 target, to get nicer looking lighting
-		#pragma target 3.0
+		//#pragma target 3.0
 
-		sampler2D _MainTex;
+		//sampler2D _MainTex;
 
 		struct Input {
-			float2 uv_MainTex;
-			float4 color : COLOR;
+			//fixed2 uv_MainTex;
+			fixed4 color : COLOR;
 		};
 
-		half _Glossiness;
-		half _Metallic;
-		fixed4 _Color;
 
 		void surf (Input IN, inout SurfaceOutput o) {
-			// Albedo comes from a texture tinted by color
-			//fixed4 c = tex2D(_MainTex, IN.uv_MainTex) * _Color;
-			o.Albedo = /*c.rgb * */IN.color;
-			// Metallic and smoothness come from slider variables
-			//o.Metallic = _Metallic;
-			//o.Smoothness = _Glossiness;
-			o.Alpha = /*c.a * */IN.color.a;
+			o.Albedo = IN.color;
+			o.Alpha = IN.color.a;
 		}
 		ENDCG
 	}
