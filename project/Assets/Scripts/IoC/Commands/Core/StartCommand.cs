@@ -1,82 +1,119 @@
-﻿using strange.extensions.command.impl;
-using strange.extensions.context.api;
+﻿using System;
+using Core;
+using Core.InstanceProviders;
+using GameWorld;
+using GameWorld.HexMap;
+using GameWorld.Settings;
+using GameWorld.Units;
+using GameWorld.Weapons;
+using Signals;
+using strange.extensions.command.impl;
 using strange.extensions.pool.api;
 using strange.extensions.pool.impl;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+using Views.HexGrid;
+using Views.Shots;
+using Views.Units;
+using strange.extensions.mediation.impl;
+using strange.extensions.mediation.api;
 
-public class StartCommand : Command
+namespace Commands
 {
-    #region Public
-    //[Inject(ContextKeys.CONTEXT_VIEW)]
-    //public GameObject ContextView { get; private set; }
-    [Inject]
-    public IResourceManager ResourceManager { get; private set; }
-
-    public override void Execute()
+    public class StartCommand : Command
     {
-        // Mediation binding
-        GlobalContext.Get().MediationBinder.Bind<HexMapCameraView>().To<HexMapCameraMediator>();
-        GlobalContext.Get().MediationBinder.Bind<HexGridView>().To<HexGridMediator>();
-        GlobalContext.Get().MediationBinder.Bind<HexMapEditorView>().To<HexMapEditorMediator>();
-        GlobalContext.Get().MediationBinder.Bind<ShipView>().To<ShipMediator>();
-        GlobalContext.Get().MediationBinder.Bind<GunView>().To<GunMediator>();
-        GlobalContext.Get().MediationBinder.Bind<CastleView>().To<CastleMediator>();
+        #region Public
+        //[Inject(ContextKeys.CONTEXT_VIEW)]
+        //public GameObject ContextView { get; private set; }
+        [Inject]
+        public IResourceManager ResourceManager { get; private set; }
+        [Inject]
+        public IMediationBinder MediationBinder { get; private set; }
 
-        injectionBinder.Bind<IWorld>().To<World>().ToSingleton();
-        injectionBinder.Bind<InstanceShip>().To<InstanceShip>();
-        injectionBinder.Bind<InstanceGun>().To<InstanceGun>();
-        injectionBinder.Bind<InstanceCastle>().To<InstanceCastle>();
-        injectionBinder.Bind<IWeapon>().To<WeaponShipCannon>().ToName<WeaponShipCannon>();
-        injectionBinder.Bind<IWeapon>().To<WeaponGroundCannon>().ToName<WeaponGroundCannon>();
-        injectionBinder.Bind<IWeapon>().To<WeaponCastleCannon>().ToName<WeaponCastleCannon>();
-        injectionBinder.Bind<IHexMap>().To<HexMap>().ToSingleton();
-        injectionBinder.Bind<IPool<SaveLoadItem>>().To<Pool<SaveLoadItem>>().ToSingleton();
-        injectionBinder.Bind<IPool<InstanceShip>>().To<Pool<InstanceShip>>().ToSingleton();
-        injectionBinder.Bind<IPool<InstanceGun>>().To<Pool<InstanceGun>>().ToSingleton();
-        injectionBinder.Bind<IPool<InstanceCastle>>().To<Pool<InstanceCastle>>().ToSingleton();
-        injectionBinder.Bind<IPool<ShipView>>().To<Pool<ShipView>>().ToSingleton();
-        injectionBinder.Bind<IPool<GunView>>().To<Pool<GunView>>().ToSingleton();
-        injectionBinder.Bind<IPool<CastleView>>().To<Pool<CastleView>>().ToSingleton();
-        injectionBinder.Bind<IPool<Shot>>().To<Pool<Shot>>().ToSingleton();
-        injectionBinder.Bind<IGameManager>().To<GameManager>().ToSingleton();
-        injectionBinder.Bind<IHexGridUtility>().To<HexGridUtility>().ToSingleton();
+        public override void Execute()
+        {
+            // Mediation binding
+            MediationBinder.Bind<HexMapCameraView>().To<HexMapCameraMediator>();
+            MediationBinder.Bind<HexGridView>().To<HexGridMediator>();
+            MediationBinder.Bind<HexMapEditorView>().To<HexMapEditorMediator>();
 
-        IPool<SaveLoadItem> poolSaveLoadItem = injectionBinder.GetInstance<IPool<SaveLoadItem>>();
-        poolSaveLoadItem.instanceProvider = new PrefabInstanceProvider(ResourceManager.GetPrefab("SaveLoadItem"));
-        poolSaveLoadItem.inflationType = PoolInflationType.INCREMENT;
+            injectionBinder.Bind<IUnitBinder>().To<UnitBinder>().ToSingleton();
+            injectionBinder.Bind<IUnitViewBinder>().To<UnitViewBinder>().ToSingleton();
+            IUnitBinder unitBinder = injectionBinder.GetInstance<IUnitBinder>();
 
-        IPool<ShipView> poolShipView = injectionBinder.GetInstance<IPool<ShipView>>();
-        poolShipView.instanceProvider = new PrefabInstanceProvider(ResourceManager.GetPrefab("Unit"));
-        poolShipView.inflationType = PoolInflationType.INCREMENT;
+            WeaponBinding<WeaponSmallCannon, SmallCannonSettings>();
+            WeaponBinding<WeaponMediumCannon, MediumCannonSettings>();
+            WeaponBinding<WeaponLargeCannon, LargeCannonSettings>();
 
-        IPool<GunView> poolGunView = injectionBinder.GetInstance<IPool<GunView>>();
-        poolGunView.instanceProvider = new PrefabInstanceProvider(ResourceManager.GetPrefab("cannon_upgrade_01"));
-        poolGunView.inflationType = PoolInflationType.INCREMENT;
+            injectionBinder.Bind<IUnitSettings>().Bind<INavalUnitSettings>().To<ShipSettings>().ToName<ShipSettings>().ToSingleton();
+            injectionBinder.Bind<IUnitSettings>().Bind<IGroundUnitSettings>().To<GroundCannonSettings>().ToName<GroundCannonSettings>().ToSingleton();
+            injectionBinder.Bind<IUnitSettings>().Bind<IGroundUnitSettings>().To<FortSettings>().ToName<FortSettings>().ToSingleton();
 
-        IPool<CastleView> poolCastleView = injectionBinder.GetInstance<IPool<CastleView>>();
-        poolCastleView.instanceProvider = new PrefabInstanceProvider(ResourceManager.GetPrefab("Watchtower_Castle"));
-        poolCastleView.inflationType = PoolInflationType.INCREMENT;
+            unitBinder.Bind<Ship>().ToView<ShipView, ShipMediator>("Ship");
+            unitBinder.Bind<GroundCannon>().ToView<GroundCannonView, GroundCannonMediator>("GroundCannon01");
+            unitBinder.Bind<Fort>().ToView<FortView, FortMediator>("Fort");
 
-        IPool<Shot> poolShot = injectionBinder.GetInstance<IPool<Shot>>();
-        poolShot.instanceProvider = new PrefabInstanceProvider(ResourceManager.GetPrefab("Bullet"));
-        poolShot.inflationType = PoolInflationType.INCREMENT;
+            PrefabBinding<RoundShotView, RoundShotMediator>("RoundShot");
 
-        commandBinder.Bind<CameraValidatePositionSignal>();
-        commandBinder.Bind<LockMapCameraSignal>();
-        commandBinder.Bind<ZoomMapCameraSignal>();
-        commandBinder.Bind<RotateMapCameraSignal>();
-        commandBinder.Bind<PanMapCameraSignal>();
-        commandBinder.Bind<HexMapCreatedSignal>();
-        commandBinder.Bind<HexGridCellSelectionSignal>();
-        commandBinder.Bind<HexGridCellTouchSignal>();
-        commandBinder.Bind<HexGridCellTouchHoldSignal>();
-        commandBinder.Bind<HexGridInteractableSignal>();
-        commandBinder.Bind<HexGridChangeUIVisibleSignal>();
-        commandBinder.Bind<ShipDestroySignal>();
-        commandBinder.Bind<InitGameSignal>().InSequence().To<InitialInstanceCommand>().To<LoadDefaultMapCommand>().To<InitGameCommand>().Once();
-        injectionBinder.GetInstance<InitGameSignal>().Dispatch();
+            injectionBinder.Bind<IWorld>().To<World>().ToSingleton();
+            injectionBinder.Bind<IHexMap>().To<HexMap>().ToSingleton();
+            injectionBinder.Bind<IPool<SaveLoadItem>>().To<Pool<SaveLoadItem>>().ToSingleton();
+            injectionBinder.Bind<IGameManager>().To<GameManager>().ToSingleton();
+            injectionBinder.Bind<IHexGridUtility>().To<HexGridUtility>().ToSingleton();
+
+            IPool<SaveLoadItem> poolSaveLoadItem = injectionBinder.GetInstance<IPool<SaveLoadItem>>();
+            poolSaveLoadItem.instanceProvider = new PrefabInstanceProvider(ResourceManager.GetPrefab("SaveLoadItem"));
+            poolSaveLoadItem.inflationType = PoolInflationType.INCREMENT;
+
+            commandBinder.Bind<Signals.Settings.Changed>();
+            commandBinder.Bind<Signals.Camera.ValidatePosition>();
+            commandBinder.Bind<Signals.Camera.Lock>();
+            commandBinder.Bind<Signals.Camera.Zoom>();
+            commandBinder.Bind<Signals.Camera.Rotate>();
+            commandBinder.Bind<Signals.Camera.Pan>();
+            commandBinder.Bind<Signals.Camera.Move>();
+            commandBinder.Bind<Signals.HexMapCreatedSignal>();
+            commandBinder.Bind<Signals.HexGrid.CellSelection>();
+            commandBinder.Bind<Signals.HexGrid.CellTouch>();
+            commandBinder.Bind<Signals.HexGrid.CellTouchHold>();
+            commandBinder.Bind<Signals.HexGrid.Interactable>();
+            commandBinder.Bind<Signals.HexGrid.ChangeUIVisible>();
+            commandBinder.Bind<Signals.HexGrid.CellTouchTap>();
+            commandBinder.Bind<Signals.Units.Weapon.Fire>();
+            commandBinder.Bind<Signals.Units.Weapon.ChangeTarget>();
+            commandBinder.Bind<Signals.Units.Weapon.ShotReachTarget>();
+            commandBinder.Bind<Signals.Units.Attack>();
+            commandBinder.Bind<Signals.Units.ChangeTarget>();
+            commandBinder.Bind<Signals.Units.Destroy>();
+            commandBinder.Bind<Signals.Units.HitDamage>();
+            commandBinder.Bind<Signals.Units.NavalUnit.MoveToCell>();
+            commandBinder.Bind<Signals.Units.NavalUnit.ReachTarget>();
+            commandBinder.Bind<Signals.Units.NavalUnit.DestinationChanged>();
+            commandBinder.Bind<Signals.Units.NavalUnit.ViewPositionChanged>();
+            commandBinder.Bind<InitGameSignal>().InSequence().To<InitialInstanceCommand>().To<LoadDefaultMapCommand>().To<InitGameCommand>().Once();
+            injectionBinder.GetInstance<InitGameSignal>().Dispatch();
+        }
+
+        private void WeaponBinding<TWeapon, TSettings>() where TWeapon : Weapon where TSettings : WeaponSettings
+        {
+            // Bind settings
+            injectionBinder.Bind<IWeaponSettings>().To<TSettings>().ToName<TSettings>().ToSingleton();
+
+            // Bind weapon type
+            injectionBinder.Bind<IWeapon>().To<TWeapon>().ToName<TWeapon>();
+        }
+
+        private void PrefabBinding<TView, TMediator>(string prefab) where TView : View where TMediator : Mediator
+        {
+            // Mediation
+            MediationBinder.Bind<TView>().To<TMediator>();
+
+            // Bind view pool
+            injectionBinder.Bind<IPool<TView>>().To<Pool<TView>>().ToSingleton();
+
+            // Set view pool parameters
+            IPool<TView> poolUnit = injectionBinder.GetInstance<IPool<TView>>();
+            poolUnit.instanceProvider = new PrefabInstanceProvider(ResourceManager.GetPrefab(prefab));
+            poolUnit.inflationType = PoolInflationType.INCREMENT;
+        }
+        #endregion
     }
-    #endregion
 }

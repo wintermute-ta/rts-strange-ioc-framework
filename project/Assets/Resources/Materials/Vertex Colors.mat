@@ -48,7 +48,7 @@ Material:
     - first:
         name: _GridTex
       second:
-        m_Texture: {fileID: 2800000, guid: 6ebaad2c316d648dd84754cdd2d09a82, type: 3}
+        m_Texture: {fileID: 2800000, guid: dfc38f014dceac349bb96c42a85c6c7b, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - first:
@@ -79,6 +79,9 @@ Material:
     - first:
         name: _BumpScale
       second: 1
+    - first:
+        name: _CellPerturbStrength
+      second: 0
     - first:
         name: _Cutoff
       second: 0.5
@@ -121,4 +124,4 @@ Material:
       second: {r: 0, g: 0, b: 0, a: 1}
     - first:
         name: _Point
-      second: {r: 13, g: -26, b: 13, a: 0}
+      second: {r: 0, g: 0, b: 0, a: 0}

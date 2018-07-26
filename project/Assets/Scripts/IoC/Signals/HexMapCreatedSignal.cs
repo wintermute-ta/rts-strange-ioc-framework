@@ -1,3 +1,6 @@
 ﻿using strange.extensions.signal.impl;
 
-public class HexMapCreatedSignal : Signal { }
+namespace Signals
+{
+    public class HexMapCreatedSignal : Signal { }
+}

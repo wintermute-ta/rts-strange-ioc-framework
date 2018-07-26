@@ -1,4 +1,4 @@
-﻿using System.Collections;
+﻿using Core;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -15,6 +15,8 @@ public class RadialMenuModel : BaseUIModel
     List<RadialItemHandler> items = new List<RadialItemHandler>();
     private int selectedItemNum = -1;
     private int openedItemsCount = 0;
+
+    private bool isInteractable = false;
 
     #region RadialMenuModel
     public void SetContext(List<ItemContext> itemsContext)
@@ -107,6 +109,7 @@ public class RadialMenuModel : BaseUIModel
         }
         radialMenuHandler.ItemSelectedSignal.AddListener(OnItemSelected);
         LifeCycle.OnUpdate.AddListener(UpdateLC);
+        InputManager.OnPointerDown.AddListener(OnPointerDown);
     }
 
     public override void Open()
@@ -158,14 +161,24 @@ public class RadialMenuModel : BaseUIModel
 
         items.Clear();
         LifeCycle.OnUpdate.RemoveListener(UpdateLC);
+        InputManager.OnPointerDown.RemoveListener(OnPointerDown);
+        isInteractable = false;
         base.Destroy();
     }
     #endregion
 
     public void UpdateLC(float deltaTime)
     {
+        Update();
+    }
+
+    public void Update()
+    {
+        if (!isInteractable)
+            return;
+
         List<ITouchData> touches = InputManager.Touches;
-        if(touches == null || touches.Count <= 0)
+        if (touches == null || touches.Count <= 0)
         {
             if (radialMenuHandler.IsOneByOne)
             {
@@ -177,6 +190,8 @@ public class RadialMenuModel : BaseUIModel
             }
             return;
         }
+
+        radialMenuHandler.UpdateItems(touches[0]);
 
         if (touches[0].Phase == TouchPhase.Ended || touches[0].Phase == TouchPhase.Canceled)
         {
@@ -188,11 +203,22 @@ public class RadialMenuModel : BaseUIModel
             {
                 CloseAll();
             }
-            return;
+            //return;
         }
 
         //for (int i = 0; i < touches.Count; i++)
         //    Debug.Log(touches[i].Position);
-        radialMenuHandler.UpdateItems(touches[0]);
+
+    }
+
+    private void OnPointerDown(ITouchData touch)
+    {
+        isInteractable = true;
+        Update();
+    }
+
+    private void OnPointerUp(ITouchData touch)
+    {
+
     }
 }

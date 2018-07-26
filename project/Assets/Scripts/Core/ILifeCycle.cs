@@ -3,9 +3,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface ILifeCycle
+namespace Core
 {
-    Signal OnBackPressed { get; }
-    Signal<float> OnUpdate { get; }
-    Signal<float> OnFixedUpdate { get; }
+    public interface ILifeCycle
+    {
+        Signal OnBackPressed { get; }
+        Signal<float> OnUpdate { get; }
+        Signal<float> OnFixedUpdate { get; }
+    }
 }

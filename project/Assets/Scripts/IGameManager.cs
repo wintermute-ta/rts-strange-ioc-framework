@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using GameWorld.Units;
+using strange.extensions.pool.api;
+using Views.Units;
 
 public interface IGameManager
 {

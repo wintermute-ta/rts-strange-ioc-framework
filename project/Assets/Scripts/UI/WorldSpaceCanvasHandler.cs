@@ -5,32 +5,33 @@ using UnityEngine;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Canvas))]
-public class WorldSpaceCanvasHandler : View {
-
+public class WorldSpaceCanvasHandler : View
+{
     [SerializeField]
     private Canvas canvas;
-    private Camera camera;
+    private Camera cachedCamera;
 
-    private void Awake()
+    protected override void Awake()
     {
         if(canvas == null)
         {
             Debug.LogWarning("You should set canvas by editor in WorldSpaceCanvasHandler in gameObject " + gameObject.name);
             canvas = this.GetComponent<Canvas>();
         }
-        camera = Camera.main;
+        cachedCamera = Camera.main;
     }
 
     public void UpdateCanvas()
     {
         canvas.transform.eulerAngles = new Vector3(
-    camera.transform.eulerAngles.x,
-    camera.transform.eulerAngles.y,
-    transform.eulerAngles.z
-    );
+            cachedCamera.transform.eulerAngles.x,
+            cachedCamera.transform.eulerAngles.y,
+            transform.eulerAngles.z
+        );
     }
 
-    private void Update()
+    private void LateUpdate()
     {
+        UpdateCanvas();
     }
 }

@@ -8,7 +8,6 @@ namespace Core
     {
         Signal<ITouchData> OnTouch { get; }
         Signal<ITouchData> OnTap { get; }
-        Signal<ITouchData> OnTouchEnd { get; }
         Signal<ITouchData> OnLongPress { get; }
         Signal<ITouchData> OnPan { get; }
         Signal<float> OnZoom { get; }

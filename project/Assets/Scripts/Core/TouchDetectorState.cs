@@ -1,8 +1,11 @@
-﻿public enum TouchDetectorState
+﻿namespace Core
 {
-    Wait,
-    SingleTouch,
-    SinglePan,
-    MultiTouch,
-    MultiTouchZoomRotate
+    public enum TouchDetectorState
+    {
+        Wait,
+        SingleTouch,
+        SinglePan,
+        MultiTouch,
+        MultiTouchZoomRotate
+    }
 }
