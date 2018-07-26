@@ -1,10 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using System;
-using System.Linq;
 using UnityEngine.UI;
 using strange.extensions.signal.impl;
+using Core;
 
 [RequireComponent(typeof(RectTransform), typeof(AspectRatioFitter))]
 public class RadialMenuHandler : BaseUIHandler
@@ -41,6 +39,7 @@ public class RadialMenuHandler : BaseUIHandler
         RectTransform rectTransform = ((RectTransform)transform);
         rectTransform.anchorMax = new Vector2(rectTransform.anchorMax.x, size);
         rectTransform.anchorMin= new Vector2(rectTransform.anchorMin.x, 0.0f);
+        hightlitedItem = -1;
         base.Open();
     }
     /// <summary>
@@ -162,26 +161,26 @@ public class RadialMenuHandler : BaseUIHandler
     }
 
 
-    public float CalculateRadius(float step, float itemSize,float startAngle,float endAngle)
-    {
-        //if (step >= 90.0f)
-        //{
-        //    return baseRadius;
-        //}
+    //public float CalculateRadius(float step, float itemSize,float startAngle,float endAngle)
+    //{
+    //    //if (step >= 90.0f)
+    //    //{
+    //    //    return baseRadius;
+    //    //}
 
-        step *= Mathf.Deg2Rad;
-        startAngle *= Mathf.Deg2Rad;
-        endAngle *= Mathf.Deg2Rad;
+    //    step *= Mathf.Deg2Rad;
+    //    startAngle *= Mathf.Deg2Rad;
+    //    endAngle *= Mathf.Deg2Rad;
 
-        RectTransform rectTransform = ((RectTransform)transform);
-        float radius = Mathf.Sqrt(itemSize * itemSize * 2.0f) / Mathf.Sin(step / 2.0f);
-        //Check pos
-        Vector2 startPos = new Vector2(Mathf.Sin(startAngle) * radius + 0.5f, Mathf.Cos(startAngle) * radius + 0.5f);
-        startPos -= new Vector2(0.5f, 0.5f);
-        startPos *= rectTransform.rect.size.x;
-        startPos += (Vector2) transform.position;
-        Debug.Log(startPos + " size (" + Display.main.renderingWidth + "," + Display.main.renderingHeight + ")");
-        //
-        return radius;
-    }
+    //    RectTransform rectTransform = ((RectTransform)transform);
+    //    float radius = Mathf.Sqrt(itemSize * itemSize * 2.0f) / Mathf.Sin(step / 2.0f);
+    //    //Check pos
+    //    Vector2 startPos = new Vector2(Mathf.Sin(startAngle) * radius + 0.5f, Mathf.Cos(startAngle) * radius + 0.5f);
+    //    startPos -= new Vector2(0.5f, 0.5f);
+    //    startPos *= rectTransform.rect.size.x;
+    //    startPos += (Vector2) transform.position;
+    //    Debug.Log(startPos + " size (" + Display.main.renderingWidth + "," + Display.main.renderingHeight + ")");
+    //    //
+    //    return radius;
+    //}
 }

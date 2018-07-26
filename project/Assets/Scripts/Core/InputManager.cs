@@ -2,7 +2,6 @@
 using strange.extensions.pool.api;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 
 namespace Core
 {
@@ -12,8 +11,6 @@ namespace Core
         public TouchSignal OnPointerUp { get; private set; }
         [Inject]
         public IPool<TouchData> TouchPool { get; private set; }
-        [Inject]
-        public ICoreLogger Logger { get; private set; }
         public float TouchSensetivity { get; set; }
         #region IInputManager
         public List<ITouchData> Touches { get; private set; }
@@ -60,15 +57,6 @@ namespace Core
         }
         #endregion
 
-        public bool IsPointerOverGameObject(ITouchData data)
-        {
-            PointerEventData eventDataCurrentPosition = new PointerEventData(EventSystem.current);
-            eventDataCurrentPosition.position = new Vector2(data.Position.x, data.Position.y);
-            List<RaycastResult> results = new List<RaycastResult>();
-            EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
-            return results.Count > 0;
-        }
-
         #region Private
         private List<ITouchData> GetTouches()
         {
@@ -89,7 +77,7 @@ namespace Core
                 // Mouse emulation
                 //Vector2 deltaMousePosition = new Vector2(Input.mousePosition.x - mousePosition.x, Input.mousePosition.y - mousePosition.y);
                 Vector2 smoothDeltaMousePosition = new Vector2(Input.GetAxis("Mouse X"), Input.GetAxis("Mouse Y"));
-                //Logger.Log(deltaMousePosition);
+                //Debug.Log(deltaMousePosition);
                 bool isStationary = !(Mathf.Abs(smoothDeltaMousePosition.x) > float.Epsilon || Mathf.Abs(smoothDeltaMousePosition.y) > float.Epsilon);
                 mousePosition.x = Input.mousePosition.x;
                 mousePosition.y = Input.mousePosition.y;
@@ -97,19 +85,19 @@ namespace Core
                 if (Input.GetMouseButtonDown(0))
                 {
                     TouchData touchData = TouchPool.GetInstance();
-                    touchData.Init(-1, TouchPhase.Began, mousePosition, smoothDeltaMousePosition / TouchSensetivity, smoothDeltaMousePosition, 1.0f, 0.0f, time);
+                    touchData.Init(0, TouchPhase.Began, mousePosition, smoothDeltaMousePosition / TouchSensetivity, smoothDeltaMousePosition, time);
                     touches.Add(touchData);
                 }
                 else if (Input.GetMouseButton(0))
                 {
                     TouchData touchData = TouchPool.GetInstance();
-                    touchData.Init(-1, isStationary ? TouchPhase.Stationary : TouchPhase.Moved, mousePosition, smoothDeltaMousePosition / TouchSensetivity, smoothDeltaMousePosition, 1.0f, 0.0f, time);
+                    touchData.Init(0, isStationary ? TouchPhase.Stationary : TouchPhase.Moved, mousePosition, smoothDeltaMousePosition / TouchSensetivity, smoothDeltaMousePosition, time);
                     touches.Add(touchData);
                 }
                 else if (Input.GetMouseButtonUp(0))
                 {
                     TouchData touchData = TouchPool.GetInstance();
-                    touchData.Init(-1, TouchPhase.Ended, mousePosition, smoothDeltaMousePosition / TouchSensetivity, smoothDeltaMousePosition, 1.0f, 0.0f, time);
+                    touchData.Init(0, TouchPhase.Ended, mousePosition, smoothDeltaMousePosition / TouchSensetivity, smoothDeltaMousePosition, time);
                     touches.Add(touchData);
                 }
 
@@ -117,19 +105,19 @@ namespace Core
                 if (Input.GetKeyDown(KeyCode.LeftControl) || Input.GetKeyDown(KeyCode.RightControl))
                 {
                     TouchData touchData = TouchPool.GetInstance();
-                    touchData.Init(1, TouchPhase.Began, Vector2.zero, Vector2.zero, Vector2.zero, 1.0f, 0.0f, time);
+                    touchData.Init(1, TouchPhase.Began, Vector2.zero, Vector2.zero, Vector2.zero, time);
                     touches.Add(touchData);
                 }
                 else if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
                 {
                     TouchData touchData = TouchPool.GetInstance();
-                    touchData.Init(1, TouchPhase.Stationary, Vector2.zero, Vector2.zero, Vector2.zero, 1.0f, 0.0f, time);
+                    touchData.Init(1, TouchPhase.Stationary, Vector2.zero, Vector2.zero, Vector2.zero, time);
                     touches.Add(touchData);
                 }
                 else if (Input.GetKeyUp(KeyCode.LeftControl) || Input.GetKeyUp(KeyCode.RightControl))
                 {
                     TouchData touchData = TouchPool.GetInstance();
-                    touchData.Init(1, TouchPhase.Ended, Vector2.zero, Vector2.zero, Vector2.zero, 1.0f, 0.0f, time);
+                    touchData.Init(1, TouchPhase.Ended, Vector2.zero, Vector2.zero, Vector2.zero, time);
                     touches.Add(touchData);
                 }
             }
@@ -150,15 +138,12 @@ namespace Core
                             if (storedTouch == null)
                             {
                                 Touches.Add(touch);
+                                OnPointerDown.Dispatch(touch);
                             }
                             else
                             {
-                                int index = Touches.IndexOf(storedTouch);
-                                Touches[index] = touch;
-                             
-                                //Logger.LogErrorFormat("Duplicated touch begin with Id = {0}", touch.Id);
+                                Debug.LogErrorFormat("Duplicated touch begin with Id = {0}", touch.Id);
                             }
-                            OnPointerDown.Dispatch(touch);
                             break;
                         }
                     case TouchPhase.Canceled:
@@ -172,7 +157,7 @@ namespace Core
                             }
                             else
                             {
-                                Logger.LogErrorFormat("Unable to find ended touch with Id = {0}", touch.Id);
+                                Debug.LogErrorFormat("Unable to find ended touch with Id = {0}", touch.Id);
                             }
                             break;
                         }

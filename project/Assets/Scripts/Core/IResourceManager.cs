@@ -10,9 +10,6 @@ namespace Core
         T GetPrefabComponent<T>(string name) where T : Component;
         T[] GetComponentsFromPrefabs<T>() where T : Component;
         Texture GetTexture(string name);
-        Material GetMaterial(string name);
         byte[] GetMap(string name);
-        Sprite GetSprite(string name);
-        AudioClip GetAudioClip(string name);
     }
 }

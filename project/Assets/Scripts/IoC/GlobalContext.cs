@@ -1,26 +1,27 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using strange.extensions.context.api;
-using strange.extensions.context.impl;
-using strange.extensions.command.api;
-using strange.extensions.command.impl;
 using strange.extensions.pool.api;
 using strange.extensions.pool.impl;
 using strange.extensions.mediation.impl;
 using strange.extensions.mediation.api;
+using Core;
+using Core.InstanceProviders;
+using Signals;
+using Commands;
+using System;
 
-public class GlobalContext : SignalsContext<StartSignal, StartCommand>
+public class GlobalContext : SignalsContext<StartSignal, StartCommand>, IGlobalContext
 {
+    [Obsolete("Static GlobalContext has been deprecated. Use injections instead GlobalContext.Get().")]
     public static GlobalContext Get() { return staticContext; }
     private static GlobalContext staticContext;
 
     #region Constructors
     public GlobalContext(MonoBehaviour contextView) : base(contextView) { }
     public GlobalContext(MonoBehaviour contextView, ContextStartupFlags flags) : base(contextView, flags) { }
-	#endregion
-	
-	#region Public
+    #endregion
+
+    #region Public
     /// <summary>
     /// </summary>
     public T GetInstance<T>()
@@ -61,6 +62,13 @@ public class GlobalContext : SignalsContext<StartSignal, StartCommand>
         return instance;
     }
 
+    public T InstanceScriptableObject<T>() where T : ScriptableObject //use this method instead new
+    {
+        T instance = ScriptableObject.CreateInstance<T>();
+        injectionBinder.injector.Inject(instance);
+        return instance;
+    }
+
     public T InstancePrefab<T>(GameObject prefab, Transform parent = null) where T : Component, new() //use this method instead new
     {
         GameObject objInstance = GameObject.Instantiate(prefab, parent);
@@ -95,13 +103,13 @@ public class GlobalContext : SignalsContext<StartSignal, StartCommand>
         base.addCoreComponents();
 
         // Add your core bindings here.
-
+        injectionBinder.Bind<IGlobalContext>().ToValue(this).ToSingleton();
     }
-	
-	// Use this for initialization
-	protected override void mapBindings()
-	{
-		base.mapBindings();
+
+    // Use this for initialization
+    protected override void mapBindings()
+    {
+        base.mapBindings();
 
         // Add your project specific bindings here.
         staticContext = this;
@@ -119,14 +127,13 @@ public class GlobalContext : SignalsContext<StartSignal, StartCommand>
         injectionBinder.Bind<IInputManager>().ToValue(InstanceComponent<InputManager>()).ToSingleton();
         injectionBinder.Bind<IResourceManager>().To<ResourceManager>().ToSingleton();
 
-
         injectionBinder.Bind<UIGlobalSignals>().ToValue(Instance<UIGlobalSignals>()).ToSingleton();
         injectionBinder.Bind<IUIManager>().ToValue(Instance<UIManager>()).ToSingleton();
         injectionBinder.Bind<IPool<GameObject>>().To<Pool<GameObject>>();
+
         injectionBinder.Bind<GameObjectInstanceProvider>().To<GameObjectInstanceProvider>();
 
         // Command binding
-        //commandBinder.Bind<TouchSignal>();
         commandBinder.Bind<InitGameCompleteSignal>().Once();
     }
 

@@ -2,7 +2,11 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public interface IDebugConsole
+namespace Core
 {
-    bool Visible { get; set; }
+    public interface IDebugConsole
+    {
+        bool Visible { get; set; }
+    }
 }
+

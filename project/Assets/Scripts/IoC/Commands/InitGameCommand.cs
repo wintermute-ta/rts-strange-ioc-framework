@@ -1,17 +1,18 @@
-﻿using strange.extensions.command.impl;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using Signals;
+using strange.extensions.command.impl;
 
-public class InitGameCommand : Command
+namespace Commands
 {
-    #region Public
-    [Inject]
-    public InitGameCompleteSignal InitGameComplete { get; private set; }
-
-    public override void Execute()
+    public class InitGameCommand : Command
     {
-        InitGameComplete.Dispatch();        
+        #region Public
+        [Inject]
+        public InitGameCompleteSignal InitGameComplete { get; private set; }
+
+        public override void Execute()
+        {
+            InitGameComplete.Dispatch();
+        }
+        #endregion
     }
-    #endregion
 }

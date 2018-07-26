@@ -1,6 +1,5 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using GameWorld.HexMap;
+using Views.HexGrid;
 
 public interface IHexGridUtility
 {

@@ -1,10 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using Core;
+using GameWorld.HexMap;
+using Views.HexGrid;
 
 // A special hexgrid-provider
 public class HexGridUtility : IHexGridUtility
 {
+    [Inject]
+    public IGlobalContext Context { get; private set; }
     [Inject]
     public IResourceManager ResourceManager { get; private set; }
 
@@ -12,13 +14,14 @@ public class HexGridUtility : IHexGridUtility
 
     public HexGridView CreateInstance()
     {
-        return view = GlobalContext.Get().InstancePrefabView<HexGridView>(ResourceManager.GetPrefab("HexGrid"));
+        return view = Context.InstancePrefabView<HexGridView>(ResourceManager.GetPrefab("HexGrid"));
     }
 
     public int CellCountX { get { return view.CellCountX; } }
     public int CellCountZ { get { return view.CellCountX; } }
     public HexGridCell GetCell(HexCoordinates coordinates)
     {
+
         return view.GetCell(coordinates);
     }
 

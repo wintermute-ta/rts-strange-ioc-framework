@@ -1,3 +1,6 @@
 ﻿using strange.extensions.signal.impl;
 
-public class StartSignal : Signal { }
+namespace Signals
+{
+    public class StartSignal : Signal { }
+}
